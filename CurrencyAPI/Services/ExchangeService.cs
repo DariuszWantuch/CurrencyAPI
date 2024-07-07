@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CurrencyAPI.Services
 {
-    public class ExchangeService: IExchangeService
+    public class ExchangeService : IExchangeService
     {
         private readonly IHttpClientFactory _clientFactory;  
         private readonly IExchangeRepository _exchangeRepository;
@@ -17,8 +17,19 @@ namespace CurrencyAPI.Services
             _exchangeRepository = exchangeRepository;
         }
 
-        public async Task<IEnumerable<ExchangeRateDTO>> GetCurrentRatesFromNBP()
+        public async Task<IEnumerable<RateDTO>> GetCurrentRatesFromNBP()
         {
+
+            IEnumerable<RateDTO> rateDTOs = null;
+
+            var existingRates = _exchangeRepository.GetRatesByPublication(DateTime.Now.Date);
+
+            if (existingRates != null && existingRates.Any())
+            {
+                rateDTOs = MapRatesFromDBToDTO(existingRates);
+                return rateDTOs;
+            }
+
             var request = new HttpRequestMessage(HttpMethod.Get, "http://api.nbp.pl/api/exchangerates/tables/A");
 
             var client = _clientFactory.CreateClient();
@@ -31,14 +42,50 @@ namespace CurrencyAPI.Services
                 var rates = await System.Text.Json.JsonSerializer.DeserializeAsync
                        <IEnumerable<ExchangeRateDTO>>(responseStream);
 
-                _exchangeRepository.SaveRatesToDatabase(rates);               
+                if(rates != null)
+                {
+                    _exchangeRepository.SaveRatesToDatabase(rates);
 
-                return rates;
+                    var publication = rates.FirstOrDefault();
+
+                    if (publication != null)
+                    {
+                        var ratesDB = _exchangeRepository.GetRatesByPublication(publication.PublicationDate);
+
+                        if (ratesDB != null)
+                        {
+                            rateDTOs = MapRatesFromDBToDTO(ratesDB);
+                        }
+                    }                   
+                }
+
+                return rateDTOs;
             }
             else
             {
                 return null;
             }
-        }      
+        }     
+        
+        public List<RateDTO> MapRatesFromDBToDTO(List<ExchangeRate> rates)
+        {
+            var ratesDTO = new List<RateDTO>();
+
+            foreach (var rate in rates)
+            {
+                var rateDTO = new RateDTO
+                {
+                    Id = rate.Id,
+                    CurrencyCode = rate.Currency.CurrencyCode,
+                    CurrencyName = rate.Currency.CurrencyName,
+                    Rate = rate.Rate,
+                    PublicationDate = rate.Publication.PublicationDate.ToShortDateString()
+                };
+
+                ratesDTO.Add(rateDTO);
+            }
+
+            return ratesDTO;
+        }
     }
 }

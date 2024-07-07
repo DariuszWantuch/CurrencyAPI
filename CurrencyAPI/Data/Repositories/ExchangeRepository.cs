@@ -80,5 +80,16 @@ namespace CurrencyAPI.Data.Repositories
                 transaction.Rollback();
             }
         }
+
+        public List<ExchangeRate> GetRatesByPublication(DateTime publication)
+        {
+            var rates = _context.ExchangeRates
+                .Include(x => x.Currency)
+                .Include(x => x.Publication)
+                .Where(x => x.Publication.PublicationDate.Equals(publication))
+                .ToList();
+
+            return rates;
+        }
     }
 }

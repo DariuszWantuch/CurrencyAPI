@@ -15,10 +15,23 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IExchangeService, ExchangeService>();
 builder.Services.AddScoped<IExchangeRepository, ExchangeRepository>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCorsPolicy",
+       builder => builder
+          .SetIsOriginAllowedToAllowWildcardSubdomains()
+          .WithOrigins("http://localhost:5173", "https://dariuszwantuch.github.io")
+          .AllowAnyMethod()
+          .AllowCredentials()
+          .AllowAnyHeader()
+          .Build()
+       );
+});
+
+
 // Configure EF Core with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 var app = builder.Build();
 
@@ -28,6 +41,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CurrencyAPI v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+app.UseCors("MyCorsPolicy");
 
 app.UseHttpsRedirection();
 

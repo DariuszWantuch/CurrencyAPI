@@ -1,12 +1,12 @@
-﻿using CurrencyAPI.Models.DTO;
+﻿using CurrencyAPI.Models;
+using CurrencyAPI.Models.DTO;
 
 namespace CurrencyAPI.Data.Repositories
 {
     public interface IExchangeRepository
     {
-        public void SaveRatesToDatabase(IEnumerable<ExchangeRateDTO> rates)
-        {
+        void SaveRatesToDatabase(IEnumerable<ExchangeRateDTO> rates);
 
-        }
+        List<ExchangeRate> GetRatesByPublication(DateTime publication);
     }
 }

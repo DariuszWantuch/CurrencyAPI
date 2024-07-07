@@ -1,9 +1,11 @@
-﻿using CurrencyAPI.Models.DTO;
+﻿using CurrencyAPI.Models;
+using CurrencyAPI.Models.DTO;
 
 namespace CurrencyAPI.Services
 {
     public interface IExchangeService
     {
-        Task<IEnumerable<ExchangeRateDTO>> GetCurrentRatesFromNBP();
+        public Task<IEnumerable<RateDTO>> GetCurrentRatesFromNBP();
+        public List<RateDTO> MapRatesFromDBToDTO(List<ExchangeRate> rates);
     }
 }
