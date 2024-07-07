@@ -1,1 +1,1 @@
-<h1 align="center">API for NBP currencies for recruitment purposes</h1>
+<h1 align="center">API for NBP currencies</h1>
